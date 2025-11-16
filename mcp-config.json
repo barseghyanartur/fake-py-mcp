@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "fake_py_mcp_stdio": {
+      "command": "python",
+      "args": [
+        "fakepy_mcp.py"
+      ]
+    }
+  }
+}
