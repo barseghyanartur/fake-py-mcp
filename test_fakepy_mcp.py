@@ -15,15 +15,20 @@ from fakepy_mcp import (
 )
 
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Test helpers
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-# --- get_return_type tests ---
+# ----------------------------------------------------------------------------
+# get_return_type tests
+# ----------------------------------------------------------------------------
 
 def make_method(name):
     def fn(): pass
     fn.__name__ = name
     return fn
+
 
 @pytest.mark.parametrize("name,expected", [
     ("bmp", str),
@@ -45,7 +50,10 @@ def test_get_return_type(name, expected):
     method = make_method(name)
     assert get_return_type(method) == expected
 
-# --- serialise_result tests ---
+# ----------------------------------------------------------------------------
+# serialise_result tests
+# ----------------------------------------------------------------------------
+
 
 def test_serialise_result_base64():
     data = b"hello"
@@ -53,26 +61,34 @@ def test_serialise_result_base64():
     import base64
     assert result == base64.b64encode(data).decode("ascii")
 
+
 def test_serialise_result_uuid():
     import uuid
     u = uuid.uuid4()
     assert serialise_result("uuid", u) == str(u)
 
+
 def test_serialise_result_date():
     d = datetime.date(2024, 1, 2)
     assert serialise_result("date", d) == "2024-01-02"
+
 
 def test_serialise_result_date_time():
     dt = datetime.datetime(2024, 1, 2, 3, 4, 5)
     assert serialise_result("date_time", dt) == "2024-01-02T03:04:05"
 
+
 def test_serialise_result_latitude_longitude():
     assert serialise_result("latitude_longitude", (1.1, 2.2)) == [1.1, 2.2]
+
 
 def test_serialise_result_passthrough():
     assert serialise_result("random", 123) == 123
 
-# --- is_supported_type tests ---
+# ----------------------------------------------------------------------------
+# is_supported_type tests
+# ----------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("typ,expected", [
     (int, True),
@@ -90,7 +106,9 @@ def test_serialise_result_passthrough():
 def test_is_supported_type(typ, expected):
     assert is_supported_type(typ) == expected
 
-# --- get_supported_params tests ---
+# ----------------------------------------------------------------------------
+# get_supported_params tests
+# ----------------------------------------------------------------------------
 
 def test_get_supported_params_filters():
     def fn(a: int, b: str, c, *args, **kwargs): pass
@@ -101,6 +119,7 @@ def test_get_supported_params_filters():
     assert all(name != "c" for name, _ in params)  # c is untyped
     assert all(name != "args" for name, _ in params)
     assert all(name != "kwargs" for name, _ in params)
+
 
 def test_get_supported_params_options():
     def fn(options: int, foo: int): pass
