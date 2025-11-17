@@ -3,7 +3,10 @@ name = "fake-py-mcp"
 description = "MCP server for fake.py."
 readme = "README.rst"
 version = "0.1"
-dependencies = []
+dependencies = [
+    "fake.py",
+    "fastmcp",
+]
 authors = [
     {name = "Artur Barseghyan", email = "artur.barseghyan@gmail.com"},
 ]
