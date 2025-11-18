@@ -157,6 +157,63 @@ def get_supported_params(sig):
 # ----------------------------------------------------------------------------
 # Dynamic tool registration (closure-safe)
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Dynamic tool registration (closure-safe)
+# ----------------------------------------------------------------------------
+
+def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
+    """Factory to create a tool function with arguments."""
+
+    # Build the function with the correct signature using closure
+    def tool_fn(*args, **kwargs):
+        # Map args to parameter names
+        call_kwargs = {}
+        for i, (name, param) in enumerate(params):
+            if name in kwargs:
+                call_kwargs[name] = kwargs[name]
+            elif i < len(args):
+                call_kwargs[name] = args[i]
+            elif param.default is not inspect.Parameter.empty:
+                call_kwargs[name] = param.default
+            else:
+                raise TypeError(f"Missing required argument: {name}")
+        try:
+            result = method(**call_kwargs)
+            return serialise_result(attr, result)
+        except Exception as err:
+            LOGGER.error(f"Error in {attr}(): {err}")
+            raise RuntimeError(f"fake.py error in {attr}(): {err}") from err
+
+    # Set function metadata
+    tool_fn.__name__ = attr
+    tool_fn.__doc__ = doc
+    tool_fn.__annotations__ = {
+        **annotations,
+        "return": return_type,
+    }
+    # Set signature to match the original method
+    tool_fn.__signature__ = inspect.Signature(
+        parameters=[param for _, param in params],
+        return_annotation=return_type
+    )
+    return tool_fn
+
+
+def _create_simple_wrapper(method, attr, return_type, doc):
+    """Factory to create a tool function without arguments."""
+
+    def tool_fn():
+        try:
+            result = method()
+            return serialise_result(attr, result)
+        except Exception as err:
+            LOGGER.error(f"Error in {attr}(): {err}")
+            raise RuntimeError(f"fake.py error in {attr}(): {err}") from err
+
+    tool_fn.__name__ = attr
+    tool_fn.__doc__ = doc
+    tool_fn.__annotations__ = {"return": return_type}
+    return tool_fn
 
 
 def register_fakepy_tools():
@@ -176,63 +233,15 @@ def register_fakepy_tools():
         doc = inspect.getdoc(method) or f"Fake.py: {attr}()"
 
         if params:
-            # Build argument list for function definition
-            arg_names = [name for name, _ in params]
             annotations = {name: param.annotation for name, param in params}
-
-            def make_tool_fn(method, attr, return_type, doc, params):
-                # Build the function with the correct signature using closure
-                def tool_fn(*args, **kwargs):
-                    # Map args to parameter names
-                    call_kwargs = {}
-                    for i, (name, param) in enumerate(params):
-                        if name in kwargs:
-                            call_kwargs[name] = kwargs[name]
-                        elif i < len(args):
-                            call_kwargs[name] = args[i]
-                        elif param.default is not inspect.Parameter.empty:
-                            call_kwargs[name] = param.default
-                        else:
-                            raise TypeError(
-                                f"Missing required argument: {name}"
-                            )
-                    try:
-                        result = method(**call_kwargs)
-                        return serialise_result(attr, result)
-                    except Exception as e:
-                        LOGGER.error(f"Error in {attr}(): {e}")
-                        raise RuntimeError(f"fake.py error in {attr}(): {e}")
-                # Set function metadata
-                tool_fn.__name__ = attr
-                tool_fn.__doc__ = doc
-                tool_fn.__annotations__ = {
-                    **annotations,
-                    "return": return_type,
-                }
-                # Set signature to match the original method
-                tool_fn.__signature__ = inspect.Signature(
-                    parameters=[param for _, param in params],
-                    return_annotation=return_type
-                )
-                return tool_fn
-
-            tool_fn = make_tool_fn(method, attr, return_type, doc, params)
+            # Pass explicit arguments to the helper
+            tool_fn = _create_tool_wrapper(
+                method, attr, return_type, doc, params, annotations
+            )
             MCP.tool(name=attr, description=doc)(tool_fn)
         else:
-            # No parameters: simple closure
-            def make_tool_fn(method, attr, return_type, doc):
-                def tool_fn():
-                    try:
-                        result = method()
-                        return serialise_result(attr, result)
-                    except Exception as e:
-                        LOGGER.error(f"Error in {attr}(): {e}")
-                        raise RuntimeError(f"fake.py error in {attr}(): {e}")
-                tool_fn.__name__ = attr
-                tool_fn.__doc__ = doc
-                tool_fn.__annotations__ = {"return": return_type}
-                return tool_fn
-            tool_fn = make_tool_fn(method, attr, return_type, doc)
+            # Pass explicit arguments to the helper
+            tool_fn = _create_simple_wrapper(method, attr, return_type, doc)
             MCP.tool(name=attr, description=doc)(tool_fn)
 
 

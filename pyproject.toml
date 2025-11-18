@@ -180,16 +180,14 @@ addopts = [
    "--capture=no",
 ]
 testpaths = [
-    "fakepy_mcp.py",
+    "test_fakepy_mcp.py",
     "*.rst",
     "**/*.rst",
 ]
 pythonpath = [
-    "examples/django",
 ]
 norecursedirs = [
     ".git",
-    "examples",
 ]
 
 [tool.coverage.run]

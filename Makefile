@@ -2,7 +2,7 @@
 VERSION := 0.1
 SHELL := /bin/bash
 # Makefile for project
-VENV := ~/.virtualenvs/fake.py/bin/activate
+VENV := ~/.virtualenvs/fake-py-mcp/bin/activate
 UNAME_S := $(shell uname -s)
 
 # Build documentation using Sphinx and zip it
