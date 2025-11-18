@@ -106,9 +106,13 @@ def serialise_result(name: str, result: Any) -> Any:
     if name == "uuid":
         return str(result)
     if name == "date":
-        return result.isoformat() if hasattr(result, "isoformat") else str(result)
+        return (
+            result.isoformat() if hasattr(result, "isoformat") else str(result)
+        )
     if name == "date_time":
-        return result.isoformat() if hasattr(result, "isoformat") else str(result)
+        return (
+            result.isoformat() if hasattr(result, "isoformat") else str(result)
+        )
     if name == "latitude_longitude":
         return list(result)
     return result
@@ -156,7 +160,7 @@ def get_supported_params(sig):
 
 
 def register_fakepy_tools():
-    """Dynamically register all FAKER methods as MCP tools with parameter support."""
+    """Dynamically register all FAKER methods as MCP tools with arg support."""
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             continue
@@ -189,7 +193,9 @@ def register_fakepy_tools():
                         elif param.default is not inspect.Parameter.empty:
                             call_kwargs[name] = param.default
                         else:
-                            raise TypeError(f"Missing required argument: {name}")
+                            raise TypeError(
+                                f"Missing required argument: {name}"
+                            )
                     try:
                         result = method(**call_kwargs)
                         return serialise_result(attr, result)
@@ -199,7 +205,10 @@ def register_fakepy_tools():
                 # Set function metadata
                 tool_fn.__name__ = attr
                 tool_fn.__doc__ = doc
-                tool_fn.__annotations__ = {**annotations, "return": return_type}
+                tool_fn.__annotations__ = {
+                    **annotations,
+                    "return": return_type,
+                }
                 # Set signature to match the original method
                 tool_fn.__signature__ = inspect.Signature(
                     parameters=[param for _, param in params],
@@ -275,10 +284,14 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.mode == "http":
-        LOGGER.info(f"Starting MCP server in HTTP mode on {args.host}:{args.port}")
+        LOGGER.info(
+            f"Starting MCP server in HTTP mode on {args.host}:{args.port}"
+        )
         MCP.run(transport="http", host=args.host, port=args.port)
     elif args.mode == "sse":
-        LOGGER.info(f"Starting MCP server in SSE mode on {args.host}:{args.port}")
+        LOGGER.info(
+            f"Starting MCP server in SSE mode on {args.host}:{args.port}"
+        )
         MCP.run(transport="sse", host=args.host, port=args.port)
     else:
         LOGGER.info("Starting MCP server in STDIO mode")
