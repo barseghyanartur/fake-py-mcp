@@ -1,5 +1,5 @@
 # Update version ONLY here
-VERSION := 0.11.10
+VERSION := 0.1
 SHELL := /bin/bash
 # Makefile for project
 VENV := ~/.virtualenvs/fake.py/bin/activate
@@ -12,7 +12,7 @@ build_docs:
 	cd builddocs && zip -r ../builddocs.zip . -x ".*" && cd ..
 
 rebuild_docs:
-	source $(VENV) && sphinx-apidoc . --full -o docs -H 'fake.py' -A 'Artur Barseghyan <artur.barseghyan@gmail.com>' -f -d 20
+	source $(VENV) && sphinx-apidoc . --full -o docs -H 'fake-py-mcp' -A 'Artur Barseghyan <artur.barseghyan@gmail.com>' -f -d 20
 	cp docs/conf.py.distrib docs/conf.py
 	cp docs/index.rst.distrib docs/index.rst
 
@@ -46,127 +46,14 @@ install:
 test: clean
 	source $(VENV) && pytest -vrx -s
 
-test-integration: customisation-test \
-dataclasses-test \
-django-test \
-hypothesis-test \
-lazyfuzzy-test \
-pydantic-test \
-sqlalchemy-test \
-sqlmodel-test \
-tortoise-test
+test-integration: test
 
-install-django:
-	source $(VENV) && pip install -r examples/django/requirements.in
+install-all: install
 
-install-hypothesis:
-	source $(VENV) && pip install -r examples/hypothesis/requirements.in
-
-install-pydantic:
-	source $(VENV) && pip install -r examples/pydantic/requirements.in
-
-install-sqlalchemy:
-	source $(VENV) && pip install -r examples/sqlalchemy/requirements.in
-
-install-sqlmodel:
-	source $(VENV) && pip install -r examples/sqlmodel/requirements.in
-
-install-tortoise:
-	source $(VENV) && pip install -r examples/tortoise/requirements.in
-
-install-all: install \
-	install-django \
-	install-hypothesis \
-	install-pydantic \
-	install-sqlalchemy \
-	install-sqlmodel \
-	install-tortoise
-
-test-all: test \
-customisation-test \
-dataclasses-test \
-django-test \
-hypothesis-test \
-lazyfuzzy-test \
-pydantic-test \
-sqlalchemy-test \
-sqlmodel-test \
-tortoise-test
-
-customisation-test:
-	source $(VENV) && cd examples/customisation/ && pytest
-
-dataclasses-test:
-	source $(VENV) && cd examples/dataclasses/ && pytest
-
-django-test:
-	source $(VENV) && cd examples/django/ && pytest
-
-hypothesis-test:
-	source $(VENV) && cd examples/hypothesis/ && pytest
-
-lazyfuzzy-test:
-	source $(VENV) && cd examples/lazyfuzzy/ && pytest
-
-pydantic-test:
-	source $(VENV) && cd examples/pydantic/ && pytest
-
-sqlalchemy-test:
-	source $(VENV) && cd examples/sqlalchemy/ && pytest
-
-sqlmodel-test:
-	source $(VENV) && cd examples/sqlmodel/ && pytest
-
-tortoise-test:
-	source $(VENV) && cd examples/tortoise/ && pytest
+test-all: test
 
 shell:
 	source $(VENV) && ipython
-
-customisation-shell:
-	source $(VENV) && cd examples/customisation/ && python manage.py shell
-
-customisation-address-cli:
-	@echo Running Python script: $(filter-out $@,$(MAKECMDGOALS))
-	source $(VENV) && cd examples/customisation/ && python address_cli.py $(filter-out $@,$(MAKECMDGOALS))
-
-customisation-band-cli:
-	@echo Running Python script: $(filter-out $@,$(MAKECMDGOALS))
-	source $(VENV) && cd examples/customisation/ && python band_cli.py $(filter-out $@,$(MAKECMDGOALS))
-
-customisation-custom-data-cli:
-	@echo Running Python script: $(filter-out $@,$(MAKECMDGOALS))
-	source $(VENV) && cd examples/customisation/ && python custom_data_cli.py $(filter-out $@,$(MAKECMDGOALS))
-
-dataclasses-shell:
-	source $(VENV) && cd examples/dataclasses/ && python manage.py shell
-
-django-shell:
-	source $(VENV) && python examples/django/manage.py shell
-
-django-runserver:
-	source $(VENV) && python examples/django/manage.py runserver 0.0.0.0:8000 --traceback -v 3
-
-django-makemigrations:
-	source $(VENV) && python examples/django/manage.py makemigrations
-
-django-apply-migrations:
-	source $(VENV) && python examples/django/manage.py migrate
-
-lazyfuzzy-shell:
-	source $(VENV) && cd examples/lazyfuzzy/ && python manage.py shell
-
-pydantic-shell:
-	source $(VENV) && cd examples/pydantic/ && python manage.py shell
-
-sqlalchemy-shell:
-	source $(VENV) && cd examples/sqlalchemy/ && python manage.py shell
-
-sqlmodel-shell:
-	source $(VENV) && cd examples/sqlmodel/ && python manage.py shell
-
-tortoise-shell:
-	source $(VENV) && cd examples/tortoise/ && python manage.py shell
 
 create-secrets:
 	source $(VENV) && detect-secrets scan > .secrets.baseline

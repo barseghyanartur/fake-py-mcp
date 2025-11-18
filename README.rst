@@ -9,7 +9,7 @@ fake-py-mcp
 
 .. _Read the Docs: http://fake-py-mcp.readthedocs.io/
 .. _Contributor guidelines: https://fakepy.readthedocs.io/en/latest/contributor_guidelines.html
-.. _llms.txt: https://barseghyanartur.github.io/fake.py/llms.txt
+.. _llms.txt: https://fake-py-mcp.readthedocs.io/en/latest/llms.txt
 
 This project exposes all `Faker` class methods from `fake.py`_ as MCP tools
 using FastMCP 2.0.
@@ -123,7 +123,6 @@ Option 2: mcpo
 
 Open http://127.0.0.1:8006/docs and enjoy OpenAPI Swagger comfort.
 
-
 Documentation
 =============
 - Documentation is available on `Read the Docs`_.
@@ -142,7 +141,6 @@ Or pytest:
 .. code-block:: sh
 
     pytest
-
 
 Writing documentation
 =====================
