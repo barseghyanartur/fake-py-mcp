@@ -3,10 +3,10 @@ import base64
 import inspect
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Union, get_origin, get_args
+from typing import Any, Callable, Dict, List, Union, get_args, get_origin
 
-from fastmcp import FastMCP
 from fake import FAKER, PROVIDER_REGISTRY
+from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
 __version__ = "0.1"
@@ -38,7 +38,7 @@ MCP = FastMCP("fake.py MCP Server")
 # ----------------------------------------------------------------------------
 # Helper: Type mapping for fake.py methods
 # ----------------------------------------------------------------------------
-PROVIDER_LIST = list(sorted(PROVIDER_REGISTRY["fake.Faker"]))
+PROVIDER_LIST = sorted(PROVIDER_REGISTRY["fake.Faker"])
 
 
 def get_return_type(method: Callable) -> Any:
@@ -54,14 +54,14 @@ def get_return_type(method: Callable) -> Any:
     if name in {"latitude_longitude"}:
         return List[float]
     if name in {
-        "first_names", 
-        "last_names", 
-        "names", 
-        "usernames", 
-        "paragraphs", 
-        "sentences", 
-        "slugs", 
-        "texts", 
+        "first_names",
+        "last_names",
+        "names",
+        "usernames",
+        "paragraphs",
+        "sentences",
+        "slugs",
+        "texts",
         "words",
     }:
         return List[str]
@@ -83,21 +83,21 @@ def get_return_type(method: Callable) -> Any:
 def serialise_result(name: str, result: Any) -> Any:
     """Serialise result for MCP transport."""
     if name in {
-        "bmp", 
-        "docx", 
-        "eml", 
-        "epub", 
-        "gif", 
-        "jpg", 
-        "odt", 
-        "pdf", 
-        "png", 
+        "bmp",
+        "docx",
+        "eml",
+        "epub",
+        "gif",
+        "jpg",
+        "odt",
+        "pdf",
+        "png",
         "ppm",
-        "rtf", 
-        "svg", 
-        "tar", 
-        "tif", 
-        "wav", 
+        "rtf",
+        "svg",
+        "tar",
+        "tif",
+        "wav",
         "zip",
     }:
         if isinstance(result, bytes):

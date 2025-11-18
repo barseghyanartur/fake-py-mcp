@@ -1,10 +1,10 @@
 import datetime
 import inspect
-import pytest
 import sys
-from typing import Optional, Union, List
-from unittest.mock import patch, MagicMock
+from typing import List, Optional, Union
+from unittest.mock import MagicMock, patch
 
+import pytest
 from fakepy_mcp import (
     get_return_type,
     get_supported_params,
