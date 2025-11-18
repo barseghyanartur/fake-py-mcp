@@ -13,6 +13,26 @@ from fakepy_mcp import (
     serialise_result,
 )
 
+__author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
+__copyright__ = "2025 Artur Barseghyan"
+__license__ = "MIT"
+__all__ = (
+    "make_method",
+    "test_get_return_type",
+    "test_serialise_result_base64",
+    "test_serialise_result_uuid",
+    "test_serialise_result_date",
+    "test_serialise_result_date_time",
+    "test_serialise_result_latitude_longitude",
+    "test_serialise_result_passthrough",
+    "test_is_supported_type",
+    "test_get_supported_params_filters",
+    "test_get_supported_params_options",
+    "test_main_stdio",
+    "test_main_http",
+    "test_main_sse",
+)
+
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 # Test helpers
@@ -73,12 +93,16 @@ def test_serialise_result_date():
 
 
 def test_serialise_result_date_time():
-    dt = datetime.datetime(2024, 1, 2, 3, 4, 5)
+    dt = datetime.datetime(
+        2024, 1, 2, 3, 4, 5
+    )
     assert serialise_result("date_time", dt) == "2024-01-02T03:04:05"
 
 
 def test_serialise_result_latitude_longitude():
-    assert serialise_result("latitude_longitude", (1.1, 2.2)) == [1.1, 2.2]
+    assert serialise_result(
+        "latitude_longitude", (1.1, 2.2)
+    ) == [1.1, 2.2]
 
 
 def test_serialise_result_passthrough():
@@ -157,7 +181,9 @@ def test_main_http(monkeypatch):
     test_args = ["prog", "http", "--host", "127.0.0.1", "--port", "1234"]
     with patch.object(sys, "argv", test_args):
         main()
-    fake_run.assert_called_once_with(transport="http", host="127.0.0.1", port=1234)
+    fake_run.assert_called_once_with(
+        transport="http", host="127.0.0.1", port=1234
+    )
 
 
 def test_main_sse(monkeypatch):
@@ -166,4 +192,6 @@ def test_main_sse(monkeypatch):
     test_args = ["prog", "sse"]
     with patch.object(sys, "argv", test_args):
         main()
-    fake_run.assert_called_once_with(transport="sse", host="0.0.0.0", port=8005)
+    fake_run.assert_called_once_with(
+        transport="sse", host="0.0.0.0", port=8005
+    )
