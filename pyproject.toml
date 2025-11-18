@@ -40,7 +40,7 @@ Repository = "https://github.com/barseghyanartur/fake-py-mcp/"
 Changelog = "https://fake-py-mcp.readthedocs.io/en/latest/changelog.html"
 
 [project.optional-dependencies]
-all = ["fake.py[dev,test,docs]"]
+all = ["fake-py-mcp[dev,test,docs]"]
 dev = [
     "build",
     "detect-secrets",
