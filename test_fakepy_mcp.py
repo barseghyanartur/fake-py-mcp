@@ -6,12 +6,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fakepy_mcp import (
+    MCP,
     get_return_type,
     get_supported_params,
     is_supported_type,
     main,
     serialise_result,
 )
+from fastmcp.client import Client
+from inline_snapshot import snapshot
 
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
@@ -195,3 +198,129 @@ def test_main_sse(monkeypatch):
     fake_run.assert_called_once_with(
         transport="sse", host="0.0.0.0", port=8005
     )
+
+
+# ----------------------------------------------------------------------------
+# Pattern: Golden Master / Snapshot Testing
+# We use inline-snapshot to freeze the expected state of the tool registry.
+# ----------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_tool_registry_snapshot():
+    """
+    Pattern: Golden Master (API Surface)
+
+    This test fetches the list of all registered tools and compares them
+    against a stored snapshot in this file.
+
+    If you 'fake.py' providers are updated or filtering logic changed
+    (get_supported_params), this test will fail.
+
+    Fix is easy - accept the changes by running:
+
+        pytest --inline-snapshot=fix,create
+    """
+    async with Client(MCP) as client:
+        tools = await client.list_tools()
+        # We sort the tools to ensure deterministic snapshotting
+        tool_names = sorted([t.name for t in tools])
+
+        # When you first run this, it will fail.
+        # Run `pytest --inline-snapshot=create` to populate the list below.
+        assert tool_names == snapshot(
+            [
+                "bin","bin_file","bmp","bmp_file","city","company_email",
+                "country","country_code","date","date_time","dir_path",
+                "docx","docx_file","domain_name","email","eml","eml_file",
+                "epub","epub_file","file_extension","file_name","file_path",
+                "first_name","first_names","free_email","free_email_domain",
+                "generic_file","geo_location","gif","gif_file","iban",
+                "image","image_url","ipv4","isbn10","isbn13","jpg",
+                "jpg_file","last_name","last_names","latitude",
+                "latitude_longitude","lazy_string_template","locale",
+                "longitude","mime_type","names","odt","odt_file",
+                "paragraph","paragraphs","password","pdf","pdf_file",
+                "png","png_file","ppm","ppm_file","pybool","pydecimal",
+                "pyfloat","pyint","pystr","random_choice","random_sample",
+                "randomise_string","rtf","rtf_file","sentence","sentences",
+                "server_info","slug","slugs","string_template","svg",
+                "svg_file","tar","tar_file","text","text_pdf",
+                "text_pdf_file","texts","tif","tif_file","time","tld",
+                "txt_file","url","username","usernames","uuid","uuids",
+                "wav","wav_file","word","words","year","zip","zip_file",
+            ]
+        )
+
+
+@pytest.mark.asyncio
+async def test_tool_schema_snapshot():
+    """
+    Pattern: Schema Validation Snapshot
+
+    Verifies the input schema of a complex tool to ensure types are
+    mapped correctly (e.g., int -> integer, str -> string).
+    """
+    async with Client(MCP) as client:
+        tools = await client.list_tools()
+        # We pick a specific tool that has arguments, e.g., 'password' or
+        # 'sentence'.
+        # Adjust 'sentence' to a tool you know exists in your version of
+        # fake.py.
+        target_tool = next((t for t in tools if t.name == "sentence"), None)
+
+        if target_tool:
+            # We snapshot the JSON schema of the arguments.
+            # This ensures we don't accidentally break argument parsing.
+            assert target_tool.inputSchema == snapshot(
+                {
+                    "properties":{
+                        "nb_words":{"default":5 ,"type":"integer"},
+                        "suffix":{"default":".","type":"string"}
+                    },
+                    "type":"object",
+                }
+            )
+
+# ----------------------------------------------------------------------------
+# CLI / Entrypoint Tests
+# ----------------------------------------------------------------------------
+
+def test_main_modes(monkeypatch):
+    """
+    Verify CLI argument parsing.
+    Rationale: Ensures the server starts in the correct mode based on flags.
+    """
+    fake_run = MagicMock()
+    monkeypatch.setattr("fakepy_mcp.MCP.run", fake_run)
+
+    # Test HTTP
+    with patch.object(sys, "argv", ["prog", "http", "--port", "9000"]):
+        main()
+    fake_run.assert_called_with(transport="http", host="0.0.0.0", port=9000)
+
+    # Test STDIO (Default)
+    with patch.object(sys, "argv", ["prog"]):
+        main()
+    fake_run.assert_called_with()
+
+
+@pytest.mark.asyncio
+async def test_custom_server_info_tool():
+    """
+    Pattern: Custom Tool Logic
+    Verifies the manually defined 'server_info' tool works alongside
+    dynamic tools.
+    """
+    async with Client(MCP) as client:
+        result = await client.call_tool("server_info")
+        data = result.content[0].text
+
+        # Depending on how your `server_info` returns data (dict vs json
+        # string), FastMCP tools usually return text. If your tool returns a
+        # Dict, FastMCP serializes it to JSON text automatically.
+        import json
+        parsed = json.loads(data)
+
+        assert parsed["server"] == "fake.py MCP Server"
+        assert "tools" in parsed
+        assert isinstance(parsed["tools"], list)
