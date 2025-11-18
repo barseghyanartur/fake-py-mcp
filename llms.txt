@@ -1,0 +1,163 @@
+fake-py-mcp
+***********
+
+This project exposes all *Faker* class methods from fake.py as MCP
+tools using FastMCP 2.0.
+
+[image: PyPI Version][image][image: Supported Python
+versions][image][image: Build Status][image][image: Documentation
+Status][image][image: llms.txt - documentation for LLMs][image][image:
+MIT][image][image: Coverage][image]
+
+
+Features
+========
+
+* 80+ fake.py fake data methods (names, text, internet, files,
+  primitives, dates, geo, books, banking, file content), dynamically
+  registered (no manual boilerplate), categorised and documented.
+
+* Binary outputs (e.g., images, PDFs) are returned as base64-encoded
+  strings.
+
+* "server_info" tool for introspection.
+
+
+Prerequisites
+=============
+
+Python 3.9+
+
+
+Installation
+============
+
+      pip install fake-py-mcp
+
+
+Usage
+=====
+
+
+Run the server
+--------------
+
+
+STDIO
+~~~~~
+
+      fake-py-mcp
+
+
+HTTP
+~~~~
+
+      fake-py-mcp http
+
+
+SSE
+~~~
+
+      fake-py-mcp http
+
+
+Connect with any MCP client to access all fake.py tools
+-------------------------------------------------------
+
+Developers need good tools. Unfortunately, FastMCP does not come with
+a GUI (like OpenAPI/Swagger), but there are good tools available.
+
+
+Option 1: MCP Inspector
+~~~~~~~~~~~~~~~~~~~~~~~
+
+**Installation**
+
+   brew install mcp-inspector
+
+**Usage**
+
+   mcp-inspector ~/.venv/bin/python ~/fakepy_mcp.py
+
+
+Option 2: mcpo
+~~~~~~~~~~~~~~
+
+**Installation**
+
+   uv tool install mcpo
+
+**Usage**
+
+   mcpo --config ./mcp-config.json --port 8006
+
+Open http://127.0.0.1:8006/docs and enjoy OpenAPI Swagger comfort.
+
+
+Documentation
+=============
+
+* Documentation is available on Read the Docs.
+
+
+Tests
+=====
+
+Run the tests with unittest:
+
+   python -m unittest fakepy_mcp.py
+
+Or pytest:
+
+   pytest
+
+
+Writing documentation
+=====================
+
+Keep the following hierarchy.
+
+   =====
+   title
+   =====
+
+   header
+   ======
+
+   sub-header
+   ----------
+
+   sub-sub-header
+   ~~~~~~~~~~~~~~
+
+   sub-sub-sub-header
+   ^^^^^^^^^^^^^^^^^^
+
+   sub-sub-sub-sub-header
+   ++++++++++++++++++++++
+
+   sub-sub-sub-sub-sub-header
+   **************************
+
+
+License
+=======
+
+MIT
+
+
+Support
+=======
+
+For security issues contact me at the e-mail given in the Author
+section.
+
+For overall issues, go to GitHub.
+
+
+Author
+======
+
+Artur Barseghyan <artur.barseghyan@gmail.com>
+
+======================================================================
