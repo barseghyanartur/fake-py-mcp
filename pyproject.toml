@@ -24,8 +24,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3.9",
+#    "Programming Language :: Python :: 3.14",
+#    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python",
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development",
@@ -180,16 +180,14 @@ addopts = [
    "--capture=no",
 ]
 testpaths = [
-    "fakepy_mcp.py",
+    "test_fakepy_mcp.py",
     "*.rst",
     "**/*.rst",
 ]
 pythonpath = [
-    "examples/django",
 ]
 norecursedirs = [
     ".git",
-    "examples",
 ]
 
 [tool.coverage.run]

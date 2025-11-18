@@ -23,7 +23,6 @@ jobs:
           - "3.11"
 #          - "3.10"
 #          - "3.9"
-#          - "3.8"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -51,13 +50,12 @@ jobs:
         #          - Windows
         #          - MacOs
         python-version:
-          - "3.14.0-alpha.5"
+          - "3.14"
           - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
-          - "3.9"
-#          - "3.8"
+#          - "3.9"
     env:
       PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
     steps:

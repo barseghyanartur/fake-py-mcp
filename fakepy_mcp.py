@@ -3,10 +3,10 @@ import base64
 import inspect
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Union, get_origin, get_args
+from typing import Any, Callable, Dict, List, Union, get_args, get_origin
 
-from fastmcp import FastMCP
 from fake import FAKER, PROVIDER_REGISTRY
+from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
 __version__ = "0.1"
@@ -38,7 +38,7 @@ MCP = FastMCP("fake.py MCP Server")
 # ----------------------------------------------------------------------------
 # Helper: Type mapping for fake.py methods
 # ----------------------------------------------------------------------------
-PROVIDER_LIST = list(sorted(PROVIDER_REGISTRY["fake.Faker"]))
+PROVIDER_LIST = sorted(PROVIDER_REGISTRY["fake.Faker"])
 
 
 def get_return_type(method: Callable) -> Any:
@@ -54,14 +54,14 @@ def get_return_type(method: Callable) -> Any:
     if name in {"latitude_longitude"}:
         return List[float]
     if name in {
-        "first_names", 
-        "last_names", 
-        "names", 
-        "usernames", 
-        "paragraphs", 
-        "sentences", 
-        "slugs", 
-        "texts", 
+        "first_names",
+        "last_names",
+        "names",
+        "usernames",
+        "paragraphs",
+        "sentences",
+        "slugs",
+        "texts",
         "words",
     }:
         return List[str]
@@ -83,21 +83,21 @@ def get_return_type(method: Callable) -> Any:
 def serialise_result(name: str, result: Any) -> Any:
     """Serialise result for MCP transport."""
     if name in {
-        "bmp", 
-        "docx", 
-        "eml", 
-        "epub", 
-        "gif", 
-        "jpg", 
-        "odt", 
-        "pdf", 
-        "png", 
+        "bmp",
+        "docx",
+        "eml",
+        "epub",
+        "gif",
+        "jpg",
+        "odt",
+        "pdf",
+        "png",
         "ppm",
-        "rtf", 
-        "svg", 
-        "tar", 
-        "tif", 
-        "wav", 
+        "rtf",
+        "svg",
+        "tar",
+        "tif",
+        "wav",
         "zip",
     }:
         if isinstance(result, bytes):
@@ -106,9 +106,13 @@ def serialise_result(name: str, result: Any) -> Any:
     if name == "uuid":
         return str(result)
     if name == "date":
-        return result.isoformat() if hasattr(result, "isoformat") else str(result)
+        return (
+            result.isoformat() if hasattr(result, "isoformat") else str(result)
+        )
     if name == "date_time":
-        return result.isoformat() if hasattr(result, "isoformat") else str(result)
+        return (
+            result.isoformat() if hasattr(result, "isoformat") else str(result)
+        )
     if name == "latitude_longitude":
         return list(result)
     return result
@@ -153,10 +157,67 @@ def get_supported_params(sig):
 # ----------------------------------------------------------------------------
 # Dynamic tool registration (closure-safe)
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Dynamic tool registration (closure-safe)
+# ----------------------------------------------------------------------------
+
+def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
+    """Factory to create a tool function with arguments."""
+
+    # Build the function with the correct signature using closure
+    def tool_fn(*args, **kwargs):
+        # Map args to parameter names
+        call_kwargs = {}
+        for i, (name, param) in enumerate(params):
+            if name in kwargs:
+                call_kwargs[name] = kwargs[name]
+            elif i < len(args):
+                call_kwargs[name] = args[i]
+            elif param.default is not inspect.Parameter.empty:
+                call_kwargs[name] = param.default
+            else:
+                raise TypeError(f"Missing required argument: {name}")
+        try:
+            result = method(**call_kwargs)
+            return serialise_result(attr, result)
+        except Exception as err:
+            LOGGER.error(f"Error in {attr}(): {err}")
+            raise RuntimeError(f"fake.py error in {attr}(): {err}") from err
+
+    # Set function metadata
+    tool_fn.__name__ = attr
+    tool_fn.__doc__ = doc
+    tool_fn.__annotations__ = {
+        **annotations,
+        "return": return_type,
+    }
+    # Set signature to match the original method
+    tool_fn.__signature__ = inspect.Signature(
+        parameters=[param for _, param in params],
+        return_annotation=return_type
+    )
+    return tool_fn
+
+
+def _create_simple_wrapper(method, attr, return_type, doc):
+    """Factory to create a tool function without arguments."""
+
+    def tool_fn():
+        try:
+            result = method()
+            return serialise_result(attr, result)
+        except Exception as err:
+            LOGGER.error(f"Error in {attr}(): {err}")
+            raise RuntimeError(f"fake.py error in {attr}(): {err}") from err
+
+    tool_fn.__name__ = attr
+    tool_fn.__doc__ = doc
+    tool_fn.__annotations__ = {"return": return_type}
+    return tool_fn
 
 
 def register_fakepy_tools():
-    """Dynamically register all FAKER methods as MCP tools with parameter support."""
+    """Dynamically register all FAKER methods as MCP tools with arg support."""
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             continue
@@ -172,58 +233,15 @@ def register_fakepy_tools():
         doc = inspect.getdoc(method) or f"Fake.py: {attr}()"
 
         if params:
-            # Build argument list for function definition
-            arg_names = [name for name, _ in params]
             annotations = {name: param.annotation for name, param in params}
-
-            def make_tool_fn(method, attr, return_type, doc, params):
-                # Build the function with the correct signature using closure
-                def tool_fn(*args, **kwargs):
-                    # Map args to parameter names
-                    call_kwargs = {}
-                    for i, (name, param) in enumerate(params):
-                        if name in kwargs:
-                            call_kwargs[name] = kwargs[name]
-                        elif i < len(args):
-                            call_kwargs[name] = args[i]
-                        elif param.default is not inspect.Parameter.empty:
-                            call_kwargs[name] = param.default
-                        else:
-                            raise TypeError(f"Missing required argument: {name}")
-                    try:
-                        result = method(**call_kwargs)
-                        return serialise_result(attr, result)
-                    except Exception as e:
-                        LOGGER.error(f"Error in {attr}(): {e}")
-                        raise RuntimeError(f"fake.py error in {attr}(): {e}")
-                # Set function metadata
-                tool_fn.__name__ = attr
-                tool_fn.__doc__ = doc
-                tool_fn.__annotations__ = {**annotations, "return": return_type}
-                # Set signature to match the original method
-                tool_fn.__signature__ = inspect.Signature(
-                    parameters=[param for _, param in params],
-                    return_annotation=return_type
-                )
-                return tool_fn
-
-            tool_fn = make_tool_fn(method, attr, return_type, doc, params)
+            # Pass explicit arguments to the helper
+            tool_fn = _create_tool_wrapper(
+                method, attr, return_type, doc, params, annotations
+            )
             MCP.tool(name=attr, description=doc)(tool_fn)
         else:
-            # No parameters: simple closure
-            def make_tool_fn(method, attr, return_type, doc):
-                def tool_fn():
-                    try:
-                        result = method()
-                        return serialise_result(attr, result)
-                    except Exception as e:
-                        LOGGER.error(f"Error in {attr}(): {e}")
-                        raise RuntimeError(f"fake.py error in {attr}(): {e}")
-                tool_fn.__name__ = attr
-                tool_fn.__doc__ = doc
-                tool_fn.__annotations__ = {"return": return_type}
-                return tool_fn
-            tool_fn = make_tool_fn(method, attr, return_type, doc)
+            # Pass explicit arguments to the helper
+            tool_fn = _create_simple_wrapper(method, attr, return_type, doc)
             MCP.tool(name=attr, description=doc)(tool_fn)
 
 
@@ -275,10 +293,14 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.mode == "http":
-        LOGGER.info(f"Starting MCP server in HTTP mode on {args.host}:{args.port}")
+        LOGGER.info(
+            f"Starting MCP server in HTTP mode on {args.host}:{args.port}"
+        )
         MCP.run(transport="http", host=args.host, port=args.port)
     elif args.mode == "sse":
-        LOGGER.info(f"Starting MCP server in SSE mode on {args.host}:{args.port}")
+        LOGGER.info(
+            f"Starting MCP server in SSE mode on {args.host}:{args.port}"
+        )
         MCP.run(transport="sse", host=args.host, port=args.port)
     else:
         LOGGER.info("Starting MCP server in STDIO mode")
