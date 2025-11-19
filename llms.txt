@@ -58,7 +58,7 @@ HTTP
 SSE
 ~~~
 
-      fake-py-mcp http
+      fake-py-mcp sse
 
 
 Connect with any MCP client to access all fake.py tools
@@ -105,7 +105,7 @@ Tests
 
 Run the tests with unittest:
 
-   python -m unittest fakepy_mcp.py
+   python -m unittest test_fakepy_mcp.py
 
 Or pytest:
 
