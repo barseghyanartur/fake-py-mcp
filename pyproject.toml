@@ -58,6 +58,7 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-codeblock",
+    "pytest-asyncio",
     "inline-snapshot",
 ]
 docs = [
