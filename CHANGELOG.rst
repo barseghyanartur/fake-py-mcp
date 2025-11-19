@@ -20,12 +20,18 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.2
+---
+2025-11-19
+
+- Minor fixes and documentation improvements.
+
 0.1
 ---
 2025-11-19
 
 .. note::
 
-    Release is dedicated to my dear mother Anna. Happy birthday!
+    Release is dedicated to my dear mother (Anna). Happy birthday!
 
 - Initial beta release.

@@ -9,7 +9,7 @@ from fake import FAKER, PROVIDER_REGISTRY
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.1"
+__version__ = "0.2"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
@@ -83,6 +83,7 @@ def get_return_type(method: Callable) -> Any:
 def serialise_result(name: str, result: Any) -> Any:
     """Serialise result for MCP transport."""
     if name in {
+        "bin",
         "bmp",
         "docx",
         "eml",
