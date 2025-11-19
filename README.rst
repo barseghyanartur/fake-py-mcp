@@ -86,7 +86,7 @@ SSE
 
    .. code-block:: sh
 
-      fake-py-mcp http
+      fake-py-mcp sse
 
 Connect with any MCP client to access all fake.py tools
 -------------------------------------------------------
@@ -134,7 +134,7 @@ Run the tests with unittest:
 
 .. code-block:: sh
 
-    python -m unittest fakepy_mcp.py
+    python -m unittest test_fakepy_mcp.py
 
 Or pytest:
 
