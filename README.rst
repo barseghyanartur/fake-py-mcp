@@ -4,6 +4,8 @@ fake-py-mcp
 .. External references
 
 .. _fake.py: https://github.com/barseghyanartur/fake.py
+.. _MCP Inspector: https://github.com/modelcontextprotocol/inspector
+.. _mcpo: https://github.com/open-webui/mcpo
 
 .. Internal references
 
@@ -53,14 +55,14 @@ Features
 
 Prerequisites
 =============
-Python 3.9+
+Python 3.10+
 
 Installation
 ============
 
    .. code-block:: sh
 
-      pip install fake-py-mcp
+      uv tool install fake-py-mcp
 
 Usage
 =====
@@ -103,9 +105,19 @@ Option 1: MCP Inspector
 
 **Usage**
 
+Run `MCP Inspector`_ on port 8006:
+
 .. code-block:: sh
 
-   mcp-inspector ~/.venv/bin/python ~/fakepy_mcp.py
+   CLIENT_PORT=8006 mcp-inspector fake-py-mcp
+
+Or if you prefer no-auth option:
+
+.. code-block:: sh
+
+    DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 mcp-inspector fake-py-mcp
+
+Open http://127.0.0.1:8006 and enjoy the `MCP Inspector`_ interface.
 
 Option 2: mcpo
 ~~~~~~~~~~~~~~
@@ -117,9 +129,11 @@ Option 2: mcpo
 
 **Usage**
 
+Run `mcpo`_ on port 8006:
+
 .. code-block:: sh
 
-   mcpo --config ./mcp-config.json --port 8006
+   mcpo --port 8006 -- fake-py-mcp
 
 Open http://127.0.0.1:8006/docs and enjoy OpenAPI Swagger comfort.
 
