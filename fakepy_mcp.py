@@ -9,7 +9,7 @@ from fake import FAKER, PROVIDER_REGISTRY
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2"
+__version__ = "0.2.1"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
@@ -54,14 +54,17 @@ def get_return_type(method: Callable) -> Any:
     if name in {"latitude_longitude"}:
         return List[float]
     if name in {
+        "company_emails",
+        "emails",
         "first_names",
+        "free_emails",
         "last_names",
         "names",
-        "usernames",
         "paragraphs",
         "sentences",
         "slugs",
         "texts",
+        "usernames",
         "words",
     }:
         return List[str]
