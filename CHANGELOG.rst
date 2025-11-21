@@ -24,7 +24,7 @@ are used for versioning (schema follows below):
 -----
 2025-11-21
 
-- Add new `fake.py` providers.
+- Add new `fake.py` providers (`emails`, `free_emails`, `company_emails`).
 
 0.2
 ---
