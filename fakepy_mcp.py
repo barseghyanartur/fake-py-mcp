@@ -3,7 +3,15 @@ import base64
 import inspect
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Union, get_args, get_origin
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Union,
+    get_args,
+    get_origin,
+)
 
 from fake import FAKER, PROVIDER_REGISTRY
 from fastmcp import FastMCP
