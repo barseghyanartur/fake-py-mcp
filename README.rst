@@ -144,13 +144,7 @@ Documentation
 Tests
 =====
 
-Run the tests with unittest:
-
-.. code-block:: sh
-
-    python -m unittest test_fakepy_mcp.py
-
-Or pytest:
+Run the tests:
 
 .. code-block:: sh
 

@@ -3,13 +3,21 @@ import base64
 import inspect
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Union, get_args, get_origin
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Union,
+    get_args,
+    get_origin,
+)
 
 from fake import FAKER, PROVIDER_REGISTRY
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
@@ -222,13 +230,17 @@ def _create_simple_wrapper(method, attr, return_type, doc):
 
 def register_fakepy_tools():
     """Dynamically register all FAKER methods as MCP tools with arg support."""
+    registered_tools = MCP._tool_manager._tools.keys()  # noqa
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
+            LOGGER.info(f"Skipping {attr}. Private methods not supported.")
             continue
         method = getattr(FAKER, attr)
         if not callable(method):
+            LOGGER.info(f"Skipping {attr}. Not a callable.")
             continue
-        if hasattr(MCP, attr):
+        if attr in registered_tools:
+            LOGGER.info(f"Skipping {attr}. Already registered.")
             continue
 
         sig = inspect.signature(method)
