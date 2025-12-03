@@ -278,6 +278,7 @@ async def test_tool_registry_snapshot():
                 "locale",
                 "longitude",
                 "mime_type",
+                "name",
                 "names",
                 "odt",
                 "odt_file",
