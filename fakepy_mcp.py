@@ -114,7 +114,7 @@ def serialise_result(name: str, result: Any) -> Any:
         "zip",
     }:
         # If result is bytes, it's raw content -> base64
-        # If result is str, it's a filepath (when storage is used) -> return path
+        # If result is str, it's a filepath (storage is used) -> return path
         if isinstance(result, bytes):
             return base64.b64encode(result).decode("ascii")
         return result
@@ -145,7 +145,7 @@ _SUPPORTED_BASES = {
 
 
 def is_supported_type(typ) -> bool:
-    """Return True if typ is a supported type, container, or Optional thereof."""
+    """Return True if typ is supported type, container, or Optional thereof."""
     # Allow Any (often used for flexible dicts/lists)
     if typ is Any:
         return True
