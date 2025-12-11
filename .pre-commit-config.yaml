@@ -47,7 +47,7 @@ repos:
 #        args: [ "--settings-path", "pyproject.toml", "--profile=black" ]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.5
+    rev: v0.14.9
     hooks:
       - id: ruff
         name: lint
@@ -56,7 +56,7 @@ repos:
 #      - id: ruff-format
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: 0.8.1
+    rev: 0.8.3
     hooks:
       - id: pydoclint
 

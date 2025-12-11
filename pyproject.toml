@@ -2,7 +2,7 @@
 name = "fake-py-mcp"
 description = "MCP server for fake.py."
 readme = "README.rst"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
     "fake.py",
     "fastmcp",
