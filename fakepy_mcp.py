@@ -14,11 +14,11 @@ from typing import (
     get_origin,
 )
 
-from fake import FAKER, PROVIDER_REGISTRY
+from fake import FAKER, PROVIDER_REGISTRY, FileSystemStorage
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
@@ -57,7 +57,7 @@ def get_return_type(method: Callable) -> Any:
         "bmp", "docx", "eml", "epub", "gif", "jpg", "odt", "pdf", "png", "ppm",
         "rtf", "svg", "tar", "tif", "wav", "zip"
     }:
-        return str  # base64-encoded
+        return str  # base64-encoded or filename
     if name.endswith("_file"):
         return str  # file path
     if name in {"latitude_longitude"}:
@@ -113,6 +113,8 @@ def serialise_result(name: str, result: Any) -> Any:
         "wav",
         "zip",
     }:
+        # If result is bytes, it's raw content -> base64
+        # If result is str, it's a filepath (when storage is used) -> return path
         if isinstance(result, bytes):
             return base64.b64encode(result).decode("ascii")
         return result
@@ -136,14 +138,14 @@ def serialise_result(name: str, result: Any) -> Any:
 
 # Include complex container types
 _SUPPORTED_BASES = {
-    int, str, float, bool,
-    list, tuple, dict,
+    int, str, float, bool, 
+    list, tuple, dict, 
     List, Tuple, Dict
 }
 
 
 def is_supported_type(typ) -> bool:
-    """Return True if typ is supported type, container, or Optional thereof."""
+    """Return True if typ is a supported type, container, or Optional thereof."""
     # Allow Any (often used for flexible dicts/lists)
     if typ is Any:
         return True
@@ -154,7 +156,7 @@ def is_supported_type(typ) -> bool:
 
     origin = get_origin(typ)
 
-    # Handle Generics (e.g. List[str], Dict[str, Any])
+     # Handle Generics (e.g. List[str], Dict[str, Any])
     if origin in _SUPPORTED_BASES:
         args = get_args(typ)
         # Recursively check inner types.
@@ -182,10 +184,12 @@ def get_supported_params(sig):
         # Exclude *args, **kwargs, and any named 'options'
         if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
             continue
-        if name.lower() in {"options"}:
+        if name.lower() in {"options", "storage"}: 
+            # We explicitly skip 'storage' here because we inject it manually
+            # if the server is configured with a storage root.
             continue
         if param.annotation is inspect.Parameter.empty:
-            continue  # skip untyped
+            continue  # skip untyped      
         if not is_supported_type(param.annotation):
             continue
         supported.append((name, param))
@@ -196,12 +200,18 @@ def get_supported_params(sig):
 # Dynamic tool registration (closure-safe)
 # ----------------------------------------------------------------------------
 
-def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
+def _create_tool_wrapper(
+    method, attr, return_type, doc, params, annotations, storage_backend=None
+):
     """Factory to create a tool function with arguments."""
+
+    # Check if the underlying method accepts 'storage'
+    method_sig = inspect.signature(method)
+    accepts_storage = "storage" in method_sig.parameters
 
     # Build the function with the correct signature using closure
     def tool_fn(*args, **kwargs):
-        # Map args to parameter names
+        # Map args to parameter names      
         call_kwargs = {}
         for i, (name, param) in enumerate(params):
             if name in kwargs:
@@ -212,6 +222,11 @@ def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
                 call_kwargs[name] = param.default
             else:
                 raise TypeError(f"Missing required argument: {name}")
+        
+        # Inject storage if available and method supports it
+        if storage_backend and accepts_storage:
+            call_kwargs["storage"] = storage_backend
+
         try:
             result = method(**call_kwargs)
             return serialise_result(attr, result)
@@ -226,7 +241,7 @@ def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
         **annotations,
         "return": return_type,
     }
-    # Set signature to match the original method
+    # Set signature to match the original method 
     tool_fn.__signature__ = inspect.Signature(
         parameters=[param for _, param in params],
         return_annotation=return_type
@@ -234,12 +249,23 @@ def _create_tool_wrapper(method, attr, return_type, doc, params, annotations):
     return tool_fn
 
 
-def _create_simple_wrapper(method, attr, return_type, doc):
+def _create_simple_wrapper(
+    method, attr, return_type, doc, storage_backend=None
+):
     """Factory to create a tool function without arguments."""
 
+    # Check if the underlying method accepts 'storage'
+    method_sig = inspect.signature(method)
+    accepts_storage = "storage" in method_sig.parameters
+
     def tool_fn():
+        call_kwargs = {}
+        # Inject storage if available and method supports it
+        if storage_backend and accepts_storage:
+            call_kwargs["storage"] = storage_backend
+
         try:
-            result = method()
+            result = method(**call_kwargs)
             return serialise_result(attr, result)
         except Exception as err:
             LOGGER.error(f"Error in {attr}(): {err}")
@@ -251,7 +277,7 @@ def _create_simple_wrapper(method, attr, return_type, doc):
     return tool_fn
 
 
-def register_fakepy_tools():
+def register_fakepy_tools(storage_backend=None):
     """Dynamically register all FAKER methods as MCP tools with arg support."""
     registered_tools = MCP._tool_manager._tools.keys()  # noqa
     for attr in PROVIDER_LIST:
@@ -273,23 +299,28 @@ def register_fakepy_tools():
 
         if params:
             annotations = {name: param.annotation for name, param in params}
-            # Pass explicit arguments to the helper
+            # Pass explicit arguments to the helper         
             tool_fn = _create_tool_wrapper(
-                method, attr, return_type, doc, params, annotations
+                method, 
+                attr, 
+                return_type, 
+                doc, 
+                params, 
+                annotations, 
+                storage_backend,
             )
             MCP.tool(name=attr, description=doc)(tool_fn)
         else:
-            # Pass explicit arguments to the helper
-            tool_fn = _create_simple_wrapper(method, attr, return_type, doc)
+            # Pass explicit arguments to the helper  
+            tool_fn = _create_simple_wrapper(
+                method, attr, return_type, doc, storage_backend
+            )
             MCP.tool(name=attr, description=doc)(tool_fn)
 
-
-register_fakepy_tools()
 
 # ----------------------------------------------------------------------------
 # Example: Server info tool
 # ----------------------------------------------------------------------------
-
 
 @MCP.tool()
 def server_info() -> Dict[str, Any]:
@@ -329,7 +360,22 @@ def main() -> None:
         default=8005,
         help="Port for HTTP mode (default: 8005)",
     )
+    parser.add_argument(
+        "--storage-root",
+        type=str,
+        default=None,
+        help="Path to storage root for file generation",
+    )
     args = parser.parse_args()
+
+    # Initialise storage if root is provided
+    storage_backend = None
+    if args.storage_root:
+        LOGGER.info(f"Initialising storage with root: {args.storage_root}")
+        storage_backend = FileSystemStorage(root_path=args.storage_root)
+
+    # Register tools with the configured storage backend
+    register_fakepy_tools(storage_backend=storage_backend)
 
     if args.mode == "http":
         LOGGER.info(
