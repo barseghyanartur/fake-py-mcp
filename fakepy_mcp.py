@@ -138,8 +138,8 @@ def serialise_result(name: str, result: Any) -> Any:
 
 # Include complex container types
 _SUPPORTED_BASES = {
-    int, str, float, bool, 
-    list, tuple, dict, 
+    int, str, float, bool,
+    list, tuple, dict,
     List, Tuple, Dict
 }
 
@@ -184,12 +184,12 @@ def get_supported_params(sig):
         # Exclude *args, **kwargs, and any named 'options'
         if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD):
             continue
-        if name.lower() in {"options", "storage"}: 
+        if name.lower() in {"options", "storage"}:
             # We explicitly skip 'storage' here because we inject it manually
             # if the server is configured with a storage root.
             continue
         if param.annotation is inspect.Parameter.empty:
-            continue  # skip untyped      
+            continue  # skip untyped
         if not is_supported_type(param.annotation):
             continue
         supported.append((name, param))
@@ -211,7 +211,7 @@ def _create_tool_wrapper(
 
     # Build the function with the correct signature using closure
     def tool_fn(*args, **kwargs):
-        # Map args to parameter names      
+        # Map args to parameter names
         call_kwargs = {}
         for i, (name, param) in enumerate(params):
             if name in kwargs:
@@ -222,7 +222,7 @@ def _create_tool_wrapper(
                 call_kwargs[name] = param.default
             else:
                 raise TypeError(f"Missing required argument: {name}")
-        
+
         # Inject storage if available and method supports it
         if storage_backend and accepts_storage:
             call_kwargs["storage"] = storage_backend
@@ -241,7 +241,7 @@ def _create_tool_wrapper(
         **annotations,
         "return": return_type,
     }
-    # Set signature to match the original method 
+    # Set signature to match the original method
     tool_fn.__signature__ = inspect.Signature(
         parameters=[param for _, param in params],
         return_annotation=return_type
@@ -299,19 +299,19 @@ def register_fakepy_tools(storage_backend=None):
 
         if params:
             annotations = {name: param.annotation for name, param in params}
-            # Pass explicit arguments to the helper         
+            # Pass explicit arguments to the helper
             tool_fn = _create_tool_wrapper(
-                method, 
-                attr, 
-                return_type, 
-                doc, 
-                params, 
-                annotations, 
+                method,
+                attr,
+                return_type,
+                doc,
+                params,
+                annotations,
                 storage_backend,
             )
             MCP.tool(name=attr, description=doc)(tool_fn)
         else:
-            # Pass explicit arguments to the helper  
+            # Pass explicit arguments to the helper
             tool_fn = _create_simple_wrapper(
                 method, attr, return_type, doc, storage_backend
             )
