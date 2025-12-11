@@ -1,7 +1,7 @@
 import datetime
 import inspect
 import sys
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -125,9 +125,13 @@ def test_serialise_result_passthrough():
     (Optional[str], True),
     (Union[int, None], True),
     (Union[str, None], True),
-    (Union[int, str], False),
-    (list, False),
-    (dict, False),
+    (Union[int, str], True),
+    (list, True),
+    (tuple, True),
+    (dict, True),
+    (List, True),
+    (Tuple, True),
+    (Dict, True),
 ])
 def test_is_supported_type(typ, expected):
     assert is_supported_type(typ) == expected
@@ -137,7 +141,8 @@ def test_is_supported_type(typ, expected):
 # ----------------------------------------------------------------------------
 
 def test_get_supported_params_filters():
-    def fn(a: int, b: str, c, *args, **kwargs): pass
+    def fn(a: int, b: str, c, *args, **kwargs):
+        pass
     sig = inspect.signature(fn)
     params = get_supported_params(sig)
     assert ("a", sig.parameters["a"]) in params
@@ -148,7 +153,8 @@ def test_get_supported_params_filters():
 
 
 def test_get_supported_params_options():
-    def fn(options: int, foo: int): pass
+    def fn(options: int, foo: int):
+        pass
     sig = inspect.signature(fn)
     params = get_supported_params(sig)
     assert ("foo", sig.parameters["foo"]) in params
