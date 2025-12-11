@@ -1,5 +1,5 @@
 # Update version ONLY here
-VERSION := 0.2.3
+VERSION := 0.2.4
 SHELL := /bin/bash
 # Makefile for project
 VENV := ~/.virtualenvs/fake-py-mcp/bin/activate

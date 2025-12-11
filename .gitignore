@@ -37,3 +37,4 @@ local_settings.py
 .scannerwork/
 *db.sqlite3*
 .mypy_cache/
+tmp_root/

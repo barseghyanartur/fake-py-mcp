@@ -24,6 +24,12 @@ are used for versioning (schema follows below):
 -----
 2025-12-11
 
+- Add `--storage-root` argument for fiddling with local storage.
+
+0.2.3
+-----
+2025-12-11
+
 - Support more input types.
 
 0.2.2
