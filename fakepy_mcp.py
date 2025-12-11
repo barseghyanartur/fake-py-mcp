@@ -8,6 +8,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Tuple,
     Union,
     get_args,
     get_origin,
@@ -17,7 +18,7 @@ from fake import FAKER, PROVIDER_REGISTRY
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
@@ -133,20 +134,45 @@ def serialise_result(name: str, result: Any) -> Any:
 # Parameter support helpers
 # ----------------------------------------------------------------------------
 
-_SIMPLE_TYPES = {int, str, float, bool}
+# Include complex container types
+_SUPPORTED_BASES = {
+    int, str, float, bool,
+    list, tuple, dict,
+    List, Tuple, Dict
+}
 
 
-def is_supported_type(typ):
-    """Return True if typ is a supported simple type or Optional thereof."""
+def is_supported_type(typ) -> bool:
+    """Return True if typ is supported type, container, or Optional thereof."""
+    # Allow Any (often used for flexible dicts/lists)
+    if typ is Any:
+        return True
+
+    # Check direct base types (e.g. int, List)
+    if typ in _SUPPORTED_BASES:
+        return True
+
     origin = get_origin(typ)
+
+    # Handle Generics (e.g. List[str], Dict[str, Any])
+    if origin in _SUPPORTED_BASES:
+        args = get_args(typ)
+        # Recursively check inner types.
+        # If no args (e.g. plain List), it's supported.
+        if not args:
+            return True
+        return all(is_supported_type(arg) for arg in args)
+
+    # Handle Union / Optional (e.g. Union[str, int], Optional[List[str]])
     if origin is Union:
         args = get_args(typ)
-        # Only support Optional[T] where T is a simple type
-        if len(args) == 2 and type(None) in args:
-            other = args[0] if args[1] is type(None) else args[1]
-            return other in _SIMPLE_TYPES
-        return False
-    return typ in _SIMPLE_TYPES
+        # Check all non-None arguments
+        non_none_args = [arg for arg in args if arg is not type(None)]
+        if not non_none_args:
+            return True
+        return all(is_supported_type(arg) for arg in non_none_args)
+
+    return False
 
 
 def get_supported_params(sig):
@@ -166,9 +192,6 @@ def get_supported_params(sig):
     return supported
 
 
-# ----------------------------------------------------------------------------
-# Dynamic tool registration (closure-safe)
-# ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 # Dynamic tool registration (closure-safe)
 # ----------------------------------------------------------------------------

@@ -3,7 +3,7 @@ Release history and notes
 
 .. External references
 
-.. _pytest-codeblock: https://github.com/barseghyanartur/pytest-codeblock/
+.. _fake.py: https://github.com/barseghyanartur/fake.py/
 
 `Sequence based identifiers
 <http://en.wikipedia.org/wiki/Software_versioning#Sequence-based_identifiers>`_
@@ -20,6 +20,12 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.2.3
+-----
+2025-12-11
+
+- Support more input types.
+
 0.2.2
 -----
 2025-12-03
@@ -30,7 +36,7 @@ are used for versioning (schema follows below):
 -----
 2025-11-21
 
-- Add new `fake.py` providers (`emails`, `free_emails`, `company_emails`).
+- Add new `fake.py`_ providers (`emails`, `free_emails`, `company_emails`).
 
 0.2
 ---
