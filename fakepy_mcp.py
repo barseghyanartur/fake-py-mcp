@@ -25,12 +25,12 @@ __license__ = "MIT"
 __all__ = (
     "MCP",
     "get_return_type",
-    "serialise_result",
-    "is_supported_type",
     "get_supported_params",
-    "register_fakepy_tools",
-    "server_info",
+    "is_supported_type",
     "main",
+    "register_fakepy_tools",
+    "serialise_result",
+    "server_info",
 )
 # ----------------------------------------------------------------------------
 # Logging setup
