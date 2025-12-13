@@ -25,12 +25,12 @@ __license__ = "MIT"
 __all__ = (
     "MCP",
     "get_return_type",
-    "serialise_result",
-    "is_supported_type",
     "get_supported_params",
-    "register_fakepy_tools",
-    "server_info",
+    "is_supported_type",
     "main",
+    "register_fakepy_tools",
+    "serialise_result",
+    "server_info",
 )
 # ----------------------------------------------------------------------------
 # Logging setup
@@ -54,8 +54,22 @@ def get_return_type(method: Callable) -> Any:
     """Infer return type for MCP schema from method docstring or name."""
     name = method.__name__
     if name in {
-        "bmp", "docx", "eml", "epub", "gif", "jpg", "odt", "pdf", "png", "ppm",
-        "rtf", "svg", "tar", "tif", "wav", "zip"
+        "bmp",
+        "docx",
+        "eml",
+        "epub",
+        "gif",
+        "jpg",
+        "odt",
+        "pdf",
+        "png",
+        "ppm",
+        "rtf",
+        "svg",
+        "tar",
+        "tif",
+        "wav",
+        "zip",
     }:
         return str  # base64-encoded or filename
     if name.endswith("_file"):
@@ -138,9 +152,16 @@ def serialise_result(name: str, result: Any) -> Any:
 
 # Include complex container types
 _SUPPORTED_BASES = {
-    int, str, float, bool,
-    list, tuple, dict,
-    List, Tuple, Dict
+    bool,
+    dict,
+    Dict,
+    float,
+    int,
+    list,
+    List,
+    str,
+    tuple,
+    Tuple,
 }
 
 
