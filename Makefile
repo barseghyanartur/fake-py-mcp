@@ -53,7 +53,16 @@ install-all: install
 test-all: test
 
 mcpo:
-	mcpo --hot-reload --port 8006 -- ~/.virtualenvs/fake-py-mcp/bin/python ~/repos/fake-py-mcp/fakepy_mcp.py
+	mcpo --port 8006 -- fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcpo-dev:
+	mcpo --hot-reload --port 8006 -- /Users/me/.virtualenvs/fake-py-mcp/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcp-inspector:
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 mcp-inspector fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcp-inspector-dev:
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 mcp-inspector /Users/me/.virtualenvs/fake-py-mcp/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
 
 shell:
 	source $(VENV) && ipython
