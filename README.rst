@@ -44,6 +44,23 @@ using FastMCP 2.0.
     :target: https://coveralls.io/github/barseghyanartur/fake-py-mcp?branch=main
     :alt: Coverage
 
+Purpose
+=======
+It's easy for a model to look smart "on paper", but real-world work requires
+following strict technical rules.
+
+This MCP server provides a wide range of complex, "fake" tools to test
+how well a model actually follows instructions. By asking a model to
+generate data for these tools, you can see if it:
+
+#. Uses the exact parameters required (no more, no less).
+#. Provides the correct data types and formats.
+#. Understands complex technical requirements without making mistakes.
+
+If a model can accurately handle these fake tools, you can trust it to
+handle your real production tools. It's a simple way to find out which
+models are actually ready for work.
+
 Features
 ========
 
