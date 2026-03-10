@@ -305,7 +305,7 @@ def register_fakepy_tools(storage_backend=None):
     if _tools_registered:
         return
     _tools_registered = True
-    
+
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             LOGGER.info(f"Skipping {attr}. Private methods not supported.")
