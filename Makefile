@@ -2,49 +2,75 @@
 VERSION := 0.2.4
 SHELL := /bin/bash
 # Makefile for project
-VENV := ~/.virtualenvs/fake-py-mcp/bin/activate
+VENV := ~/.venv/bin/activate
 UNAME_S := $(shell uname -s)
 
+# ----------------------------------------------------------------------------
+# Documentation
+# ----------------------------------------------------------------------------
+
 # Build documentation using Sphinx and zip it
-build_docs:
-	source $(VENV) && sphinx-build -n -b text docs builddocs
-	source $(VENV) && sphinx-build -n -a -b html docs builddocs
+build-docs:
+	uv run sphinx-build -n -b text docs builddocs
+	uv run sphinx-build -n -a -b html docs builddocs
 	cd builddocs && zip -r ../builddocs.zip . -x ".*" && cd ..
 
-rebuild_docs:
-	source $(VENV) && sphinx-apidoc . --full -o docs -H 'fake-py-mcp' -A 'Artur Barseghyan <artur.barseghyan@gmail.com>' -f -d 20
+rebuild-docs:
+	uv run sphinx-apidoc . --full -o docs -H 'fake-py-mcp' -A 'Artur Barseghyan <artur.barseghyan@gmail.com>' -f -d 20
 	cp docs/conf.py.distrib docs/conf.py
 	cp docs/index.rst.distrib docs/index.rst
 
-build_docs_epub:
+build-docs-epub:
 	$(MAKE) -C docs/ epub
 
-build_docs_pdf:
+build-docs-pdf:
 	$(MAKE) -C docs/ latexpdf
 
-auto_build_docs:
-	source $(VENV) && sphinx-autobuild docs docs/_build/html
+auto-build-docs:
+	uv run sphinx-autobuild docs docs/_build/html
+
+# Serve the built docs on port 5001
+serve-docs:
+	source $(VENV) && cd builddocs && python -m http.server 5001
+
+# ----------------------------------------------------------------------------
+# Pre-commit
+# ----------------------------------------------------------------------------
+
+pre-commit-install:
+	pre-commit install
 
 pre-commit:
 	pre-commit run --all-files
 
+# ----------------------------------------------------------------------------
+# Linting
+# ----------------------------------------------------------------------------
+
 doc8:
-	source $(VENV) && doc8
+	uv run doc8
 
 # Run ruff on the codebase
 ruff:
-	source $(VENV) && ruff check .
+	uv run ruff check .
 
-# Serve the built docs on port 5001
-serve_docs:
-	source $(VENV) && cd builddocs && python -m http.server 5001
+# ----------------------------------------------------------------------------
+# Installation
+# ----------------------------------------------------------------------------
+
+create-venv:
+	uv venv
 
 # Install the project
-install:
-	source $(VENV) && pip install -e .[all]
+install: create-venv
+	uv sync --all-extras
+
+# ----------------------------------------------------------------------------
+# Tests
+# ----------------------------------------------------------------------------
 
 test: clean
-	source $(VENV) && pytest -vrx -s
+	uv run pytest -vrx -s
 
 test-integration: test
 
@@ -52,26 +78,19 @@ install-all: install
 
 test-all: test
 
-mcpo:
-	mcpo --port 8006 -- fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
-
-mcpo-dev:
-	mcpo --hot-reload --port 8006 -- /Users/me/.virtualenvs/fake-py-mcp/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
-
-mcp-inspector:
-	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 mcp-inspector fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
-
-mcp-inspector-dev:
-	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 mcp-inspector /Users/me/.virtualenvs/fake-py-mcp/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
-
-shell:
-	source $(VENV) && ipython
+# ----------------------------------------------------------------------------
+# Security
+# ----------------------------------------------------------------------------
 
 create-secrets:
-	source $(VENV) && detect-secrets scan > .secrets.baseline
+	uv run detect-secrets scan > .secrets.baseline
 
 detect-secrets:
-	source $(VENV) && detect-secrets scan --baseline .secrets.baseline
+	uv run detect-secrets scan --baseline .secrets.baseline
+
+# ----------------------------------------------------------------------------
+# Development
+# ----------------------------------------------------------------------------
 
 # Clean up generated files
 clean:
@@ -95,11 +114,30 @@ clean:
 	rm -rf dist/
 	rm -rf fake.py.egg-info/
 
+mcpo:
+	uv run mcpo --port 8006 -- fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcpo-dev:
+	uv run mcpo --hot-reload --port 8006 -- /Users/me/repos/fake-py-mcp/.venv/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcp-inspector:
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+mcp-inspector-dev:
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector /Users/me/repos/fake-py-mcp/.venv/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+
+shell:
+	uv run ipython
+
 compile-requirements:
 	source $(VENV) && uv pip compile --all-extras -o docs/requirements.txt pyproject.toml
 
 compile-requirements-upgrade:
 	source $(VENV) && uv pip compile --all-extras -o docs/requirements.txt pyproject.toml --upgrade
+
+# ----------------------------------------------------------------------------
+# Release
+# ----------------------------------------------------------------------------
 
 update-version:
 	@echo "Updating version in pyproject.toml and fakepy_mcp.py"
@@ -112,19 +150,23 @@ update-version:
 	fi
 
 build:
-	source $(VENV) && python -m build .
+	uv run python -m build .
 
 check-build:
-	source $(VENV) && twine check dist/*
+	uv run twine check dist/*
 
 release:
-	source $(VENV) && twine upload dist/* --verbose
+	uv run twine upload dist/* --verbose
 
 test-release:
-	source $(VENV) && twine upload --repository testpypi dist/*
+	uv run twine upload --repository testpypi dist/*
 
 mypy:
-	source $(VENV) && mypy fake.py
+	uv run mypy fake.py
+
+# ----------------------------------------------------------------------------
+# Other
+# ----------------------------------------------------------------------------
 
 %:
 	@:

@@ -5,7 +5,7 @@ readme = "README.rst"
 version = "0.2.4"
 dependencies = [
     "fake.py",
-    "fastmcp",
+    "fastmcp<3.0",
 ]
 authors = [
     {name = "Artur Barseghyan", email = "artur.barseghyan@gmail.com"},
@@ -41,18 +41,20 @@ Changelog = "https://fake-py-mcp.readthedocs.io/en/latest/changelog.html"
 
 [project.optional-dependencies]
 all = ["fake-py-mcp[dev,test,docs]"]
-dev = [
+build = [
     "build",
+    "pkginfo",
+    "twine",
+    "wheel",
+]
+dev = [
     "detect-secrets",
     "doc8",
     "ipython",
     "mypy",
-    "pkginfo",
     "pydoclint",
     "ruff",
-    "twine",
     "uv",
-    "wheel",
 ]
 test = [
     "pytest",
