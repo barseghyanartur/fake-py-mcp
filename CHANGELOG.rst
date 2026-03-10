@@ -20,6 +20,12 @@ are used for versioning (schema follows below):
   0.3.4 to 0.4).
 - All backwards incompatible changes are mentioned in this document.
 
+0.3
+---
+2026-03-11
+
+- Upgrade to `fastmcp` 3.x.
+
 0.2.3
 -----
 2025-12-11
