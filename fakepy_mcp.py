@@ -43,6 +43,7 @@ LOGGER = logging.getLogger(__name__)
 # MCP Server instance
 # ----------------------------------------------------------------------------
 mcp = FastMCP("fake.py MCP Server")
+_tools_registered = False
 
 # ----------------------------------------------------------------------------
 # Helper: Type mapping for fake.py methods
@@ -300,6 +301,11 @@ def _create_simple_wrapper(
 
 def register_fakepy_tools(storage_backend=None):
     """Dynamically register all FAKER methods as MCP tools with arg support."""
+    global _tools_registered
+    if _tools_registered:
+        return
+    _tools_registered = True
+    
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             LOGGER.info(f"Skipping {attr}. Private methods not supported.")
