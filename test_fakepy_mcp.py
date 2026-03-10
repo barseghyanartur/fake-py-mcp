@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fakepy_mcp import (
-    mcp,
     get_return_type,
     get_supported_params,
     is_supported_type,
     main,
+    mcp,
     serialise_result,
 )
 from fastmcp.client import Client
@@ -363,7 +363,7 @@ async def test_tool_schema_snapshot():
             # This ensures we don't accidentally break argument parsing.
             assert target_tool.inputSchema == snapshot(
                 {
-                    'additionalProperties': False,
+                    "additionalProperties": False,
                     "properties":{
                         "nb_words":{"default":5 ,"type":"integer"},
                         "suffix":{"default":".","type":"string"}
