@@ -2,7 +2,7 @@
 VERSION := 0.3
 SHELL := /bin/bash
 # Makefile for project
-VENV := ~/.venv/bin/activate
+VENV := .venv/bin/activate
 UNAME_S := $(shell uname -s)
 
 # ----------------------------------------------------------------------------
