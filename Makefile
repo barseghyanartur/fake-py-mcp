@@ -31,7 +31,7 @@ auto-build-docs:
 
 # Serve the built docs on port 5001
 serve-docs:
-	source $(VENV) && cd builddocs && python -m http.server 5001
+	uv run python -m http.server 5001 --directory builddocs
 
 # ----------------------------------------------------------------------------
 # Pre-commit
@@ -130,10 +130,10 @@ shell:
 	uv run ipython
 
 compile-requirements:
-	source $(VENV) && uv pip compile --all-extras -o docs/requirements.txt pyproject.toml
+	uv pip compile --all-extras -o docs/requirements.txt pyproject.toml
 
 compile-requirements-upgrade:
-	source $(VENV) && uv pip compile --all-extras -o docs/requirements.txt pyproject.toml --upgrade
+	uv pip compile --all-extras -o docs/requirements.txt pyproject.toml --upgrade
 
 # ----------------------------------------------------------------------------
 # Release
