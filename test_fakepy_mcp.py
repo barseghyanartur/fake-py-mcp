@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fakepy_mcp import (
-    MCP,
     get_return_type,
     get_supported_params,
     is_supported_type,
     main,
+    mcp,
     serialise_result,
 )
 from fastmcp.client import Client
@@ -177,7 +177,7 @@ def test_get_supported_params_options():
 
 def test_main_stdio(monkeypatch):
     fake_run = MagicMock()
-    monkeypatch.setattr("fakepy_mcp.MCP.run", fake_run)
+    monkeypatch.setattr("fakepy_mcp.mcp.run", fake_run)
     test_args = ["prog"]
     with patch.object(sys, "argv", test_args):
         main()
@@ -186,7 +186,7 @@ def test_main_stdio(monkeypatch):
 
 def test_main_http(monkeypatch):
     fake_run = MagicMock()
-    monkeypatch.setattr("fakepy_mcp.MCP.run", fake_run)
+    monkeypatch.setattr("fakepy_mcp.mcp.run", fake_run)
     test_args = ["prog", "http", "--host", "127.0.0.1", "--port", "1234"]
     with patch.object(sys, "argv", test_args):
         main()
@@ -197,7 +197,7 @@ def test_main_http(monkeypatch):
 
 def test_main_sse(monkeypatch):
     fake_run = MagicMock()
-    monkeypatch.setattr("fakepy_mcp.MCP.run", fake_run)
+    monkeypatch.setattr("fakepy_mcp.mcp.run", fake_run)
     test_args = ["prog", "sse"]
     with patch.object(sys, "argv", test_args):
         main()
@@ -226,7 +226,7 @@ async def test_tool_registry_snapshot():
 
         pytest --inline-snapshot=fix,create
     """
-    async with Client(MCP) as client:
+    async with Client(mcp) as client:
         tools = await client.list_tools()
         # We sort the tools to ensure deterministic snapshotting
         tool_names = sorted([t.name for t in tools])
@@ -350,7 +350,7 @@ async def test_tool_schema_snapshot():
     Verifies the input schema of a complex tool to ensure types are
     mapped correctly (e.g., int -> integer, str -> string).
     """
-    async with Client(MCP) as client:
+    async with Client(mcp) as client:
         tools = await client.list_tools()
         # We pick a specific tool that has arguments, e.g., 'password' or
         # 'sentence'.
@@ -363,6 +363,7 @@ async def test_tool_schema_snapshot():
             # This ensures we don't accidentally break argument parsing.
             assert target_tool.inputSchema == snapshot(
                 {
+                    "additionalProperties": False,
                     "properties":{
                         "nb_words":{"default":5 ,"type":"integer"},
                         "suffix":{"default":".","type":"string"}
@@ -381,7 +382,7 @@ def test_main_modes(monkeypatch):
     Rationale: Ensures the server starts in the correct mode based on flags.
     """
     fake_run = MagicMock()
-    monkeypatch.setattr("fakepy_mcp.MCP.run", fake_run)
+    monkeypatch.setattr("fakepy_mcp.mcp.run", fake_run)
 
     # Test HTTP
     with patch.object(sys, "argv", ["prog", "http", "--port", "9000"]):
@@ -401,7 +402,7 @@ async def test_custom_server_info_tool():
     Verifies the manually defined 'server_info' tool works alongside
     dynamic tools.
     """
-    async with Client(MCP) as client:
+    async with Client(mcp) as client:
         result = await client.call_tool("server_info")
         data = result.content[0].text
 

@@ -18,12 +18,12 @@ from fake import FAKER, PROVIDER_REGISTRY, FileSystemStorage
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2.4"
+__version__ = "0.3"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
 __all__ = (
-    "MCP",
+    "mcp",
     "get_return_type",
     "get_supported_params",
     "is_supported_type",
@@ -42,7 +42,8 @@ LOGGER = logging.getLogger(__name__)
 # ----------------------------------------------------------------------------
 # MCP Server instance
 # ----------------------------------------------------------------------------
-MCP = FastMCP("fake.py MCP Server")
+mcp = FastMCP("fake.py MCP Server")
+_tools_registered = False
 
 # ----------------------------------------------------------------------------
 # Helper: Type mapping for fake.py methods
@@ -300,7 +301,11 @@ def _create_simple_wrapper(
 
 def register_fakepy_tools(storage_backend=None):
     """Dynamically register all FAKER methods as MCP tools with arg support."""
-    registered_tools = MCP._tool_manager._tools.keys()  # noqa
+    global _tools_registered
+    if _tools_registered:
+        return
+    _tools_registered = True
+
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             LOGGER.info(f"Skipping {attr}. Private methods not supported.")
@@ -308,9 +313,6 @@ def register_fakepy_tools(storage_backend=None):
         method = getattr(FAKER, attr)
         if not callable(method):
             LOGGER.info(f"Skipping {attr}. Not a callable.")
-            continue
-        if attr in registered_tools:
-            LOGGER.info(f"Skipping {attr}. Already registered.")
             continue
 
         sig = inspect.signature(method)
@@ -330,20 +332,20 @@ def register_fakepy_tools(storage_backend=None):
                 annotations,
                 storage_backend,
             )
-            MCP.tool(name=attr, description=doc)(tool_fn)
+            mcp.tool(name=attr, description=doc)(tool_fn)
         else:
             # Pass explicit arguments to the helper
             tool_fn = _create_simple_wrapper(
                 method, attr, return_type, doc, storage_backend
             )
-            MCP.tool(name=attr, description=doc)(tool_fn)
+            mcp.tool(name=attr, description=doc)(tool_fn)
 
 
 # ----------------------------------------------------------------------------
 # Example: Server info tool
 # ----------------------------------------------------------------------------
 
-@MCP.tool()
+@mcp.tool()
 def server_info() -> Dict[str, Any]:
     """
     Get information about this MCP server and available fake.py tools.
@@ -402,15 +404,15 @@ def main() -> None:
         LOGGER.info(
             f"Starting MCP server in HTTP mode on {args.host}:{args.port}"
         )
-        MCP.run(transport="http", host=args.host, port=args.port)
+        mcp.run(transport="http", host=args.host, port=args.port)
     elif args.mode == "sse":
         LOGGER.info(
             f"Starting MCP server in SSE mode on {args.host}:{args.port}"
         )
-        MCP.run(transport="sse", host=args.host, port=args.port)
+        mcp.run(transport="sse", host=args.host, port=args.port)
     else:
         LOGGER.info("Starting MCP server in STDIO mode")
-        MCP.run()
+        mcp.run()
 
 
 if __name__ == "__main__":
