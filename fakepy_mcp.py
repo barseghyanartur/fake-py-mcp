@@ -18,12 +18,12 @@ from fake import FAKER, PROVIDER_REGISTRY, FileSystemStorage
 from fastmcp import FastMCP
 
 __title__ = "fake-py-mcp"
-__version__ = "0.2.4"
+__version__ = "0.3"
 __author__ = "Artur Barseghyan <artur.barseghyan@gmail.com>"
 __copyright__ = "2025 Artur Barseghyan"
 __license__ = "MIT"
 __all__ = (
-    "MCP",
+    "mcp",
     "get_return_type",
     "get_supported_params",
     "is_supported_type",
@@ -42,7 +42,8 @@ LOGGER = logging.getLogger(__name__)
 # ----------------------------------------------------------------------------
 # MCP Server instance
 # ----------------------------------------------------------------------------
-MCP = FastMCP("fake.py MCP Server")
+mcp = FastMCP("fake.py MCP Server")
+_tools_registered = False
 
 # ----------------------------------------------------------------------------
 # Helper: Type mapping for fake.py methods
@@ -299,8 +300,23 @@ def _create_simple_wrapper(
 
 
 def register_fakepy_tools(storage_backend=None):
-    """Dynamically register all FAKER methods as MCP tools with arg support."""
-    registered_tools = MCP._tool_manager._tools.keys()  # noqa
+    """
+    Register available Faker provider methods as MCP tools and mark registration as complete.
+    
+    This function inspects the Faker provider, creates callable MCP tool wrappers for each supported
+    method (including argument handling and optional storage injection), and registers them with the
+    module-level MCP instance. Invocation is idempotent: if tools have already been registered this
+    function returns immediately and does nothing.
+    
+    Parameters:
+        storage_backend (optional): A storage backend to be injected into provider methods that
+            accept a `storage` parameter (e.g., FileSystemStorage). If `None`, no storage is injected.
+    """
+    global _tools_registered
+    if _tools_registered:
+        return
+    _tools_registered = True
+
     for attr in PROVIDER_LIST:
         if attr.startswith("_"):
             LOGGER.info(f"Skipping {attr}. Private methods not supported.")
@@ -308,9 +324,6 @@ def register_fakepy_tools(storage_backend=None):
         method = getattr(FAKER, attr)
         if not callable(method):
             LOGGER.info(f"Skipping {attr}. Not a callable.")
-            continue
-        if attr in registered_tools:
-            LOGGER.info(f"Skipping {attr}. Already registered.")
             continue
 
         sig = inspect.signature(method)
@@ -330,23 +343,29 @@ def register_fakepy_tools(storage_backend=None):
                 annotations,
                 storage_backend,
             )
-            MCP.tool(name=attr, description=doc)(tool_fn)
+            mcp.tool(name=attr, description=doc)(tool_fn)
         else:
             # Pass explicit arguments to the helper
             tool_fn = _create_simple_wrapper(
                 method, attr, return_type, doc, storage_backend
             )
-            MCP.tool(name=attr, description=doc)(tool_fn)
+            mcp.tool(name=attr, description=doc)(tool_fn)
 
 
 # ----------------------------------------------------------------------------
 # Example: Server info tool
 # ----------------------------------------------------------------------------
 
-@MCP.tool()
+@mcp.tool()
 def server_info() -> Dict[str, Any]:
     """
-    Get information about this MCP server and available fake.py tools.
+    Provide information about the MCP server and the available fake.py tools.
+    
+    Returns:
+        info (Dict[str, Any]): A dictionary containing:
+            - server (str): The server name.
+            - tools (List[str]): A sorted list of available faker tool names (public, callable attributes).
+            - docs (str): URL to the fake.py project documentation.
     """
     return {
         "server": "fake.py MCP Server",
@@ -360,6 +379,11 @@ def server_info() -> Dict[str, Any]:
 
 
 def main() -> None:
+    """
+    Run the fake.py MCP server according to command-line arguments.
+    
+    Parses command-line options to choose a transport mode (stdio, http, or sse), optional host and port for HTTP/SSE, and an optional --storage-root path. If --storage-root is provided, a FileSystemStorage is created and passed to register_fakepy_tools before the server starts. Starts the mcp server using the selected transport and network parameters.
+    """
     parser = argparse.ArgumentParser(
         description="fake.py MCP Server — run in stdio or http mode."
     )
@@ -402,15 +426,15 @@ def main() -> None:
         LOGGER.info(
             f"Starting MCP server in HTTP mode on {args.host}:{args.port}"
         )
-        MCP.run(transport="http", host=args.host, port=args.port)
+        mcp.run(transport="http", host=args.host, port=args.port)
     elif args.mode == "sse":
         LOGGER.info(
             f"Starting MCP server in SSE mode on {args.host}:{args.port}"
         )
-        MCP.run(transport="sse", host=args.host, port=args.port)
+        mcp.run(transport="sse", host=args.host, port=args.port)
     else:
         LOGGER.info("Starting MCP server in STDIO mode")
-        MCP.run()
+        mcp.run()
 
 
 if __name__ == "__main__":
