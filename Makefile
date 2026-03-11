@@ -54,6 +54,9 @@ doc8:
 ruff:
 	uv run ruff check .
 
+mypy:
+	uv run mypy .
+
 # ----------------------------------------------------------------------------
 # Installation
 # ----------------------------------------------------------------------------
@@ -163,9 +166,6 @@ release:
 
 test-release:
 	uv run twine upload --repository testpypi dist/*
-
-mypy:
-	uv run mypy fake.py
 
 # ----------------------------------------------------------------------------
 # Other
