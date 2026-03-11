@@ -38,3 +38,4 @@ local_settings.py
 *db.sqlite3*
 .mypy_cache/
 tmp_root/
+uv.lock

@@ -2,10 +2,10 @@
 name = "fake-py-mcp"
 description = "MCP server for fake.py."
 readme = "README.rst"
-version = "0.2.4"
+version = "0.3"
 dependencies = [
     "fake.py",
-    "fastmcp",
+    "fastmcp>=3.0",
 ]
 authors = [
     {name = "Artur Barseghyan", email = "artur.barseghyan@gmail.com"},
@@ -40,19 +40,21 @@ Repository = "https://github.com/barseghyanartur/fake-py-mcp/"
 Changelog = "https://fake-py-mcp.readthedocs.io/en/latest/changelog.html"
 
 [project.optional-dependencies]
-all = ["fake-py-mcp[dev,test,docs]"]
-dev = [
+all = ["fake-py-mcp[build,dev,test,docs]"]
+build = [
     "build",
+    "pkginfo",
+    "twine",
+    "wheel",
+]
+dev = [
     "detect-secrets",
     "doc8",
     "ipython",
     "mypy",
-    "pkginfo",
     "pydoclint",
     "ruff",
-    "twine",
     "uv",
-    "wheel",
 ]
 test = [
     "pytest",
