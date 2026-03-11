@@ -114,17 +114,20 @@ clean:
 	rm -rf dist/
 	rm -rf fake.py.egg-info/
 
+PROJECT_ROOT := $(CURDIR)
+PYTHON := $(PROJECT_ROOT)/.venv/bin/python
+
 mcpo:
-	uv run mcpo --port 8006 -- fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+	uv run mcpo --port 8006 -- fake-py-mcp --storage-root=$(PROJECT_ROOT)/tmp_root
 
 mcpo-dev:
-	uv run mcpo --hot-reload --port 8006 -- /Users/me/repos/fake-py-mcp/.venv/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+	uv run mcpo --hot-reload --port 8006 -- $(PYTHON) $(PROJECT_ROOT)/fakepy_mcp.py --storage-root=$(PROJECT_ROOT)/tmp_root
 
 mcp-inspector:
-	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector fake-py-mcp --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector fake-py-mcp --storage-root=$(PROJECT_ROOT)/tmp_root
 
 mcp-inspector-dev:
-	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector /Users/me/repos/fake-py-mcp/.venv/bin/python /Users/me/repos/fake-py-mcp/fakepy_mcp.py --storage-root=/Users/me/repos/fake-py-mcp/tmp_root
+	DANGEROUSLY_OMIT_AUTH=true CLIENT_PORT=8006 uv run mcp-inspector $(PYTHON) $(PROJECT_ROOT)/fakepy_mcp.py --storage-root=$(PROJECT_ROOT)/tmp_root
 
 shell:
 	uv run ipython
